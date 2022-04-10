@@ -1,0 +1,172 @@
+#!/usr/bin/python3
+from argparse import ArgumentParser
+from typing import List, Tuple
+import sys
+
+
+LDA = 0
+LDC = 1
+
+CMPLT = 2
+CMPGT = 3
+CMPLQ = 4
+CMPGQ = 5
+CMPEQ = 6
+CMPNE = 7
+
+JMPNZ = 8
+JMPZ = 9
+
+ADD = 10
+SUB = 11
+MUL = 12
+DIV = 13
+
+DUP = 14
+DROP = 15
+
+CALL = 16
+RET = 17
+
+HLT = 18
+
+
+def split_int(x: int):
+    return (
+        (x & 0xFF00000000000000) >> 56,
+        (x & 0xFF000000000000) >> 48,
+        (x & 0xFF0000000000) >> 40,
+        (x & 0xFF00000000) >> 32,
+        (x & 0xFF000000) >> 24,
+        (x & 0xFF0000) >> 16,
+        (x & 0xFF00) >> 8,
+        x & 0xFF,
+    )
+
+
+def parse(content: str) -> List[Tuple[str, List]]:
+    result = []
+    block = None
+    code = []
+
+    for line in content.lower().split("\n"):
+        line = line.split(";;")[0].strip()
+
+        if line.endswith(":"):
+            if block:
+                result.append((block, code.copy()))
+                code.clear()
+
+            block = line[:-1]
+        else:
+            l = line.split()
+            if l:
+                code.append(l)
+
+    result.append((block, code))
+    return result
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser("sasm", usage="sasm [OPTIONS] file")
+
+    parser.add_argument(
+        "-o", "--output", dest="output", default="a.out", help="output file to write to"
+    )
+
+    parser.add_argument("file", help="the file to assemble to bytecode")
+
+    result = parser.parse_args(sys.argv[1:])
+
+    if not result.file:
+        parser.print_help()
+        exit(-1)
+
+    with open(result.file) as file:
+        content = file.read()
+
+        compiled = []
+
+        addresses = {}
+        counter = 0
+        for block, code in parse(content):
+            addresses[block] = counter
+
+            for instruction in code:
+                op = instruction[0]
+
+                if op == "ldc":
+                    compiled.append(LDC)
+                    compiled.extend(split_int(int(instruction[1])))
+                    counter += 9
+                elif op == "lda":
+                    compiled.append(LDA)
+                    compiled.append(int(instruction[1]) & 0xFF)
+                    counter += 2
+                elif op == "cmplt":
+                    compiled.append(CMPLT)
+                    counter += 1
+                elif op == "cmpgt":
+                    compiled.append(CMPGT)
+                    counter += 1
+                elif op == "cmplq":
+                    compiled.append(CMPLQ)
+                    counter += 1
+                elif op == "cmpgq":
+                    compiled.append(CMPGQ)
+                    counter += 1
+                elif op == "cmpeq":
+                    compiled.append(CMPEQ)
+                    counter += 1
+                elif op == "cmpne":
+                    compiled.append(CMPNE)
+                    counter += 1
+                elif op == "jmpnz":
+                    compiled.append(JMPNZ)
+                    compiled.append(instruction[1])
+                    counter += 9
+                elif op == "jmpz":
+                    compiled.append(JMPZ)
+                    compiled.append(instruction[1])
+                    counter += 9
+                elif op == "add":
+                    compiled.append(ADD)
+                    counter += 1
+                elif op == "sub":
+                    compiled.append(SUB)
+                    counter += 1
+                elif op == "mul":
+                    compiled.append(MUL)
+                elif op == "div":
+                    counter += 1
+                    compiled.append(DIV)
+                    counter += 1
+                elif op == "dup":
+                    compiled.append(DUP)
+                    counter += 1
+                elif op == "drop":
+                    compiled.append(DROP)
+                    counter += 1
+                elif op == "call":
+                    compiled.append(CALL)
+                    compiled.append(instruction[1])
+                    counter += 9
+                elif op == "ret":
+                    compiled.append(RET)
+                    compiled.append(int(instruction[1]) & 0xFF)
+                    counter += 2
+                elif op == "hlt":
+                    compiled.append(HLT)
+                    counter += 1
+
+        linked = []
+        for i in compiled:
+            if isinstance(i, int):
+                linked.append(i & 0xFF)
+            elif isinstance(i, str):
+                linked.extend(split_int(int(addresses[i])))
+            else:
+                print("error: unreachable")
+
+        with open(result.output, "wb") as out:
+            out.write(bytes(linked))

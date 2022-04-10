@@ -34,33 +34,24 @@ enum op {
 struct Stack rs = {.index = -1};
 struct Stack *rsp = &rs;
 
-uint8_t code[] = {
-    LDC, 0, 0, 0, 0, 0, 0, 0, 33,  //
-    CALL, 0, 0, 0, 0, 0, 0, 0, 19, // 5 = addrof fib
-    HLT,                           //
+uint8_t *code;
+uint64_t max_size;
 
-    // Fibonacci Function
-    LDA, 0,                      //
-    LDC, 0, 0, 0, 0, 0, 0, 0, 2, //
-    CMPLT,                       //
+void read_file(char *file) {
+  FILE *f = fopen(file, "r");
+  if (!f) {
+    printf("error: can't open file\n");
+    exit(-3);
+  }
 
-    JMPZ, 0, 0, 0, 0, 0, 0, 0, 4, //
-    LDA, 0,                       //
-    RET, 1,                       //
+  fseek(f, 0, SEEK_END);
+  max_size = ftell(f);
+  fseek(f, 0, SEEK_SET);
 
-    LDA, 0,                        //
-    LDC, 0, 0, 0, 0, 0, 0, 0, 1,   //
-    SUB,                           //
-    CALL, 0, 0, 0, 0, 0, 0, 0, 19, // 5 = addrof fib
-
-    LDA, 0,                        //
-    LDC, 0, 0, 0, 0, 0, 0, 0, 2,   //
-    SUB,                           //
-    CALL, 0, 0, 0, 0, 0, 0, 0, 19, // 5 = addrof fib
-
-    ADD,    //
-    RET, 1, //
-};
+  code = (uint8_t *)malloc(max_size + 1);
+  fread(code, max_size, 1, f);
+  fclose(f);
+}
 
 uint64_t ip = 0;
 uint64_t fp = 0;
@@ -79,6 +70,13 @@ uint64_t read64() {
 }
 
 int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    printf("usage: vm <file>\n");
+    printf("missing file\n");
+    exit(0);
+  }
+  read_file(argv[1]);
+
   uint8_t instruction;
   while ((instruction = read8()) != HLT) {
 
@@ -259,7 +257,7 @@ int main(int argc, char *argv[]) {
     case JMPZ: {
       uint64_t ts = read64();
       if (pop(rsp) == 0) {
-        ip += ts;
+        ip = ts;
       }
 
 #ifdef DEBUG
@@ -271,7 +269,7 @@ int main(int argc, char *argv[]) {
     case JMPNZ: {
       uint64_t ts = read64();
       if (pop(rsp) != 0) {
-        ip += ts;
+        ip = ts;
       }
 
 #ifdef DEBUG
