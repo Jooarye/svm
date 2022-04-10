@@ -1,0 +1,12 @@
+cflags = -Ofast -Wall -Iinc/
+
+rule cc
+  command = clang $cflags -c $in -o $out
+
+rule ld
+  command = clang -o $out $in
+
+
+build bin/main.o: cc src/main.c
+build bin/stack.o: cc src/stack.c
+build vm: ld bin/main.o bin/stack.o
