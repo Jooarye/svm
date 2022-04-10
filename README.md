@@ -1,3 +1,4 @@
-# Project: compiler
+# Project: svm
 
-This is a sample description.
+This is a simple virtual machine that runs bytecode, compiled by the packaged assembler.
+
