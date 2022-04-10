@@ -301,9 +301,8 @@ int main(int argc, char *argv[]) {
       break;
     }
     default: {
-      printf("not implemented: %s\t%d\n", get_op_name(instruction),
-             instruction);
-      return 0;
+      printf("error: not implemented %d\n", instruction);
+      return -2;
     }
     }
 
