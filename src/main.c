@@ -31,45 +31,6 @@ enum op {
   HLT,
 };
 
-const char *get_op_name(uint8_t op) {
-  switch (op) {
-  case LDA:
-    return "LDA";
-  case LDC:
-    return "LDC";
-  case CMPLT:
-    return "CMPLT";
-  case CMPGT:
-    return "CMPGT";
-  case CMPLQ:
-    return "CMPLQ";
-  case CMPGQ:
-    return "CMPGQ";
-  case CMPEQ:
-    return "CMPEQ";
-  case CMPNE:
-    return "CMPNE";
-  case JMPNZ:
-    return "SKIPNZ";
-  case JMPZ:
-    return "SKIPZ";
-  case ADD:
-    return "ADD";
-  case SUB:
-    return "SUB";
-  case MUL:
-    return "MUL";
-  case CALL:
-    return "CALL";
-  case RET:
-    return "RET";
-  case HLT:
-    return "END";
-  }
-
-  return "UNK";
-}
-
 struct Stack rs = {.index = -1};
 struct Stack *rsp = &rs;
 
