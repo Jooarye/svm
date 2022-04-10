@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from argparse import ArgumentParser
+from re import S
 from typing import List, Tuple
 import sys
 
@@ -24,11 +25,12 @@ DIV = 13
 
 DUP = 14
 DROP = 15
+GET = 16
 
-CALL = 16
-RET = 17
+CALL = 17
+RET = 18
 
-HLT = 18
+HLT = 19
 
 
 def split_int(x: int):
@@ -158,6 +160,10 @@ if __name__ == "__main__":
                 elif op == "hlt":
                     compiled.append(HLT)
                     counter += 1
+                elif op == "get":
+                    compiled.append(GET)
+                    compiled.append(int(instruction[1]))
+                    counter += 2
 
         linked = []
         for i in compiled:

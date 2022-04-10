@@ -24,6 +24,7 @@ enum op {
 
   DUP,
   DROP,
+  GET,
 
   CALL,
   RET,
@@ -294,6 +295,16 @@ int main(int argc, char *argv[]) {
 
 #ifdef DEBUG
       printf("   op: DROP\n");
+#endif
+
+      break;
+    }
+    case GET: {
+      uint8_t x = read8();
+      push(rsp, at(rsp, size(rsp) - 1 - x));
+
+#ifdef DEBUG
+      printf("   op: GET %d\n", x);
 #endif
 
       break;

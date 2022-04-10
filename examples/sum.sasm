@@ -1,0 +1,24 @@
+main:
+  ldc   5
+  call  sum
+  hlt
+
+sum:
+  lda   0
+  ldc   1
+  cmpeq
+
+  jmpz  sum_complex
+  ldc   1
+  ret   1
+
+sum_complex:
+  lda   0
+  ldc   1
+  sub
+  call  sum
+
+  lda   0
+  add
+
+  ret   1
